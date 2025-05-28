@@ -111,8 +111,6 @@ jobs:
         cd openwrt
         rm -rf feeds/packages/lang/golang
         git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
-        cd feeds/packages/lang/golang
-        git checkout 3bb7214b2d1137d58f8103b37d1eae822df7c0df
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
@@ -227,7 +225,15 @@ jobs:
         touch release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
-
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
