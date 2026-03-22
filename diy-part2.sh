@@ -1,20 +1,23 @@
 #!/bin/bash
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-# File name: diy-part2.sh
-# Description: OpenWrt DIY script part 2 (After Update feeds)
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
 
-# Modify default IP
-#sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
+# 1. 修改默认管理 IP
+sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
 
-# Modify default theme
-#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+# 2. 物理删除不需要的插件目录（强制精简）
+# 即使 .config 里有 y，只要源码文件夹删了，编译器就会自动忽略，这是最稳的方法
+REMOVELIST="luci-app-frpc frpc luci-app-ddns-go ddns-go luci-app-natmap natmap luci-app-watchcat watchcat luci-app-xlnetacc luci-app-upnp miniupnpd luci-app-smartdns smartdns"
 
-# Modify hostname
-#sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
+for pkg in $REMOVELIST; do
+    find package/ feeds/ -name "$pkg" -type d -exec rm -rf {} +
+done
+
+# 3. 解决 OpenClash 手动安装报错的核心：强制切换 dnsmasq 版本
+# OpenWrt 默认带的是 dnsmasq，但 OpenClash 必须用 dnsmasq-full
+# 我们先删除源码里的普通版，编译器就会被迫去编译 full 版
+find package/ -name "dnsmasq" -type d -exec rm -rf {} +
+
+# 4. 修正 .config 中的关键核心选项（防止被 SSR Plus 等重新勾选）
+# 删除那些会导致自动下载几十MB二进制文件的 INCLUDE 选项
+sed -i '/CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Xray/d' .config
+sed -i '/CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_v2ray/d' .config
+sed -i '/CONFIG_PACKAGE_luci-app-vssr_INCLUDE_Xray/d' .config
