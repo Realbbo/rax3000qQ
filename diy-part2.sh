@@ -21,3 +21,20 @@ find package/ -name "dnsmasq" -type d -exec rm -rf {} +
 sed -i '/CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Xray/d' .config
 sed -i '/CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_v2ray/d' .config
 sed -i '/CONFIG_PACKAGE_luci-app-vssr_INCLUDE_Xray/d' .config
+# 5. 修正 DNS 冲突（OpenClash 必备）
+sed -i 's/CONFIG_PACKAGE_dnsmasq=y/# CONFIG_PACKAGE_dnsmasq is not set/' .config
+sed -i '/CONFIG_PACKAGE_dnsmasq-full/d' .config
+echo 'CONFIG_PACKAGE_dnsmasq-full=y' >> .config
+
+# 6. 移除你明确不需要的插件（避免挤占空间）
+sed -i '/CONFIG_PACKAGE_luci-app-watchcat/d' .config
+sed -i '/CONFIG_PACKAGE_watchcat/d' .config
+sed -i '/CONFIG_PACKAGE_luci-app-upnp/d' .config
+sed -i '/CONFIG_PACKAGE_miniupnpd/d' .config
+sed -i '/CONFIG_PACKAGE_luci-app-ddns-go/d' .config
+sed -i '/CONFIG_PACKAGE_ddns-go/d' .config
+
+# 7. 砍掉 SSR Plus 和 VSSR 的巨大内核（如果你用 OpenClash，这些是没用的）
+sed -i '/CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Xray/d' .config
+sed -i '/CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_v2ray/d' .config
+sed -i '/CONFIG_PACKAGE_luci-app-vssr_INCLUDE_Xray/d' .config
